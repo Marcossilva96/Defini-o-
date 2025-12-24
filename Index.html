@@ -194,3 +194,211 @@ render();
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SISTEMA</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --blue:#00eaff;
+  --dark:#020409;
+  --panel:rgba(5,10,15,.95);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Orbitron',sans-serif}
+
+body{
+  background:radial-gradient(circle at top,#07131f,#000);
+  color:var(--blue);
+  height:100vh;
+  overflow:hidden;
+}
+
+/* HUD */
+.hud{
+  position:fixed;top:0;width:100%;
+  padding:12px;
+  background:rgba(0,0,0,.85);
+  border-bottom:1px solid rgba(0,234,255,.25);
+  z-index:3;
+}
+
+.hud div{font-size:12px}
+
+/* XP */
+.xpbar{height:4px;background:#111;margin-top:6px;overflow:hidden}
+.xp{
+  height:100%;
+  background:linear-gradient(90deg,#00eaff,#0055ff);
+  transition:.4s;
+}
+
+/* UI */
+.ui{padding-top:90px}
+
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+
+/* Card */
+.card{
+  background:var(--panel);
+  border:1px solid rgba(0,234,255,.3);
+  border-radius:8px;
+  padding:16px;
+  margin-bottom:12px;
+}
+
+/* Botões */
+button{
+  width:100%;
+  padding:14px;
+  margin:6px 0;
+  background:rgba(0,234,255,.12);
+  border:1px solid var(--blue);
+  color:var(--blue);
+  border-radius:6px;
+  font-size:13px;
+}
+
+button:active{background:rgba(0,234,255,.35)}
+
+/* Sistema */
+.system{
+  position:fixed;inset:0;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.88);
+  z-index:10;
+}
+
+.system.active{display:flex}
+
+.system-box{
+  border:1px solid var(--blue);
+  padding:20px;
+  width:85%;
+  text-align:center;
+  animation:pop .25s ease;
+}
+
+@keyframes pop{
+  from{transform:scale(.85);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* Efeitos */
+.shake{animation:shake .3s}
+@keyframes shake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-4px)}
+  50%{transform:translateX(4px)}
+  75%{transform:translateX(-2px)}
+  100%{transform:translateX(0)}
+}
+</style>
+</head>
+
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div id="hudUser"></div>
+  <div id="hudRank"></div>
+  <div id="hudLevel"></div>
+  <div class="xpbar"><div class="xp" id="xp"></div></div>
+</div>
+
+<div class="ui">
+
+<div id="home" class="screen active">
+  <div class="card">
+    <button onclick="go('status')">STATUS</button>
+    <button onclick="mission()">EXECUTAR MISSÃO</button>
+  </div>
+</div>
+
+<div id="status" class="screen">
+  <div class="card" id="stats"></div>
+  <button onclick="up()">ALOCAR PONTO</button>
+  <button onclick="go('home')">RETORNAR</button>
+</div>
+
+</div>
+
+<div class="system" id="system">
+  <div class="system-box" id="systemText"></div>
+</div>
+
+<script>
+let p = JSON.parse(localStorage.getItem("sys")) || {
+  user:"Usuário Autorizado",
+  rank:"E",
+  title:"Desperto",
+  level:1,
+  xp:0,
+  xpMax:100,
+  points:5,
+  str:10
+};
+
+const ranks=["E","D","C","B","A","S"];
+const titles=["Desperto","Adaptado","Ascendente","Predador","Dominante","Monarca"];
+
+function save(){localStorage.setItem("sys",JSON.stringify(p))}
+
+function system(msg){
+  systemText.innerText="🟦 SISTEMA\n\n"+msg;
+  systemEl.classList.add("active");
+  setTimeout(()=>systemEl.classList.remove("active"),1300);
+}
+
+const systemEl=document.getElementById("system");
+
+function render(){
+  hudUser.innerText=p.user+" — "+p.title;
+  hudRank.innerText="Rank: "+p.rank;
+  hudLevel.innerText="Nível: "+p.level;
+  xp.style.width=(p.xp/p.xpMax*100)+"%";
+  stats.innerText=`FORÇA: ${p.str}\nPONTOS: ${p.points}`;
+}
+
+function up(){
+  if(p.points<=0){system("Pontos insuficientes.");return;}
+  p.str++;p.points--;save();render();
+  system("Atributo fortalecido.");
+}
+
+function mission(){
+  p.xp+=60;
+  system("Missão concluída.");
+
+  if(p.xp>=p.xpMax){
+    p.xp=0;
+    p.level++;
+    p.points+=5;
+    p.xpMax+=50;
+    p.rank=ranks[Math.min(Math.floor(p.level/3),5)];
+    p.title=titles[Math.min(Math.floor(p.level/3),5)];
+
+    document.body.classList.add("shake");
+    setTimeout(()=>document.body.classList.remove("shake"),300);
+
+    system("Limite ultrapassado.\nNível aumentado.");
+  }
+  save();render();
+}
+
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+render();
+</script>
+
+</body>
+</html>
